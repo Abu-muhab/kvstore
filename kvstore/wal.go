@@ -12,8 +12,8 @@ import (
 type WalEntryType int
 
 const (
-	SetValueCommandType = iota
-	DeleteValueComandType
+	WalEntryTypeSetCommand = iota
+	WalEntryTypeDeleteCommand
 )
 
 type walEntry struct {

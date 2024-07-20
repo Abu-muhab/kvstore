@@ -23,10 +23,14 @@ func (store *KvStore) applyLog() {
 	logEntries := store.wal.Entries
 
 	for _, entry := range logEntries {
-		if entry.EntryType == SetValueCommandType {
+		if entry.EntryType == WalEntryTypeSetCommand {
 			command := SetValueCommand{}
 			command.fromWalEntry(entry)
 			store.kv[command.Key] = command.Value
+		} else if entry.EntryType == WalEntryTypeDeleteCommand {
+			command := DeleteValueCommand{}
+			command.fromWalEntry(entry)
+			store.kv[command.Key] = ""
 		}
 	}
 }
@@ -48,4 +52,18 @@ func (store *KvStore) Put(key string, value string) error {
 
 func (store *KvStore) Get(key string) string {
 	return store.kv[key]
+}
+
+func (store *KvStore) Delete(key string) error {
+	command := DeleteValueCommand{
+		Key: key,
+	}
+	walEntry, err := command.toWalEntry()
+	if err != nil {
+		return err
+	}
+
+	store.wal.WriteEntry(&walEntry)
+	store.kv[key] = ""
+	return nil
 }
